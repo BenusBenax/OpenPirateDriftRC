@@ -1181,9 +1181,16 @@ void updateBlackboxAvailability()
 
 void setup()
 {
-    delay(3000);
-
+    // emit an immediate marker BEFORE any delay, so we can tell whether the
+    // app image even starts. On the headless C3 build Serial maps to the
+    // native USB (HWCDC / USB-Serial-JTAG) port, NOT to UART0.
     Serial.begin(115200);
+    Serial.flush();
+    Serial.println("");
+    Serial.println("[BOOT] app image running; waiting for USB/HWCDC enumerator...");
+    Serial.flush();
+
+    delay(3000);
 
     #if defined(OPENDRIFT_BOARD_AMOLED_164)
     // Give the external panel and sensor rails time to settle before touching
@@ -1437,56 +1444,74 @@ void setup()
     // SERVO
     //-------------------
 
-    if(!steeringServo.begin(
-        SERVO_OUTPUT_PIN,
-        controlLoopHz
-    ))
+    bool steeringServoOk =
+        steeringServo.begin(
+            SERVO_OUTPUT_PIN,
+            controlLoopHz
+        );
+
+    if(!steeringServoOk)
     {
         bootConsole.log(
+            #if defined(OPENDRIFT_BOARD_HEADLESS)
+            "ledc: steering output unavailable; continuing headless",
+            "[WARN]",
+            TFT_YELLOW
+            #else
             "ledc: steering output failed; safe reboot",
             "[FAIL]",
             TFT_RED
+            #endif
         );
 
+        #if !defined(OPENDRIFT_BOARD_HEADLESS)
         Serial.flush();
         delay(1500);
         esp_restart();
+        #else
+        Serial.println("Steering servo unavailable; continuing headless");
+        #endif
+    }
+    else
+    {
+        steeringServo.configure(
+            settings.getServoCenter(),
+            settings.getServoReverse(),
+            settings.getServoTravel(),
+            settings.getServoQuiet(),
+            settings.isSteeringCalibrated(),
+            settings.getSteeringMin(),
+            settings.getSteeringCenter(),
+            settings.getSteeringMax()
+        );
+
+        steeringServo.center();
+
+        Serial.println("SERVO OK");
     }
 
-    steeringServo.configure(
-        settings.getServoCenter(),
-        settings.getServoReverse(),
-        settings.getServoTravel(),
-        settings.getServoQuiet(),
-        settings.isSteeringCalibrated(),
-        settings.getSteeringMin(),
-        settings.getSteeringCenter(),
-        settings.getSteeringMax()
-    );
-
-    steeringServo.center();
-
-    Serial.println("SERVO OK");
-
-    bootConsole.log(
-        #if defined(OPENDRIFT_INPUT_CRSF)
-        #if defined(OPENDRIFT_CRSF_OOPS_SWAPPED_PINS)
-        "ledc: steering servo output attached on gpio16"
-        #elif defined(OPENDRIFT_AMOLED_V2)
-        "ledc: steering servo output attached on gpio15"
-        #else
-        "ledc: steering servo output attached on gpio15"
-        #endif
-        #else
-        #if defined(OPENDRIFT_BOARD_C3)
-        "ledc: steering servo output attached on gpio0"
-        #elif defined(OPENDRIFT_AMOLED_V2)
-        "ledc: steering servo output attached on gpio1"
-        #else
-        "ledc: steering servo output attached on gpio17"
-        #endif
-        #endif
-    );
+    if(steeringServoOk)
+    {
+        bootConsole.log(
+            #if defined(OPENDRIFT_INPUT_CRSF)
+            #if defined(OPENDRIFT_CRSF_OOPS_SWAPPED_PINS)
+            "ledc: steering servo output attached on gpio16"
+            #elif defined(OPENDRIFT_AMOLED_V2)
+            "ledc: steering servo output attached on gpio15"
+            #else
+            "ledc: steering servo output attached on gpio15"
+            #endif
+            #else
+            #if defined(OPENDRIFT_BOARD_C3)
+            "ledc: steering servo output attached on gpio0"
+            #elif defined(OPENDRIFT_AMOLED_V2)
+            "ledc: steering servo output attached on gpio1"
+            #else
+            "ledc: steering servo output attached on gpio17"
+            #endif
+            #endif
+        );
+    }
 
     //-------------------
     // RADIO
