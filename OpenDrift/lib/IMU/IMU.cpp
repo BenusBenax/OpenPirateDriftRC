@@ -3,10 +3,42 @@
 #include <math.h>
 
 
+#if defined(OPENDRIFT_BOARD_HEADLESS)
+// GY-521 / MPU6050 configured for +/-1000 deg/s (matching the QMI8658 full
+// scale as closely as possible) and +/-4g of acceleration.
+static constexpr float MPU_GYRO_RESOLUTION_DPS = 1000.0f / 32768.0f;
+static constexpr float MPU_ACCEL_RESOLUTION_G = 4.0f / 32768.0f;
+#endif
+
+
 bool IMU::begin()
 {
     Wire.begin(SDA_PIN, SCL_PIN);
 
+
+    #if defined(OPENDRIFT_BOARD_HEADLESS)
+
+    // MPU6050 (GY-521) has no begin() helper; probe the bus, then configure.
+    if(!mpu.testConnection())
+    {
+        return false;
+    }
+
+    mpu.initialize();
+
+    mpu.setFullScaleGyroRange(
+        MPU6050_GYRO_FS_1000
+    );
+
+    mpu.setFullScaleAccelRange(
+        MPU6050_ACCEL_FS_4
+    );
+
+    gyroLpfMode = 0;
+
+    return true;
+
+    #else
 
     if (!qmi.begin(
         Wire,
@@ -39,12 +71,23 @@ bool IMU::begin()
 
 
     return true;
+
+    #endif
 }
 
 
 bool IMU::setGyroLpfMode(uint8_t mode)
 {
     mode = constrain(mode, 0, 2);
+
+    #if defined(OPENDRIFT_BOARD_HEADLESS)
+
+    // MPU6050 has no user-facing hardware LPF selection exposed here; keep the
+    // requested mode for telemetry/blackbox compatibility and apply nothing.
+    gyroLpfMode = mode;
+    return true;
+
+    #else
 
     if(mode == gyroLpfMode)
     {
@@ -69,6 +112,8 @@ bool IMU::setGyroLpfMode(uint8_t mode)
 
     gyroLpfMode = mode;
     return true;
+
+    #endif
 }
 
 
@@ -101,6 +146,41 @@ void IMU::update()
 
     lastUpdateMicros = now;
 
+
+    #if defined(OPENDRIFT_BOARD_HEADLESS)
+
+    // MPU6050 returns raw ADC counts; scale them into engineering units.
+    // Gyro is already in deg/s (DPS), matching what the PID core expects.
+    int16_t rawX = 0;
+    int16_t rawY = 0;
+    int16_t rawZ = 0;
+
+    mpu.getRotation(
+        &rawX,
+        &rawY,
+        &rawZ
+    );
+
+    gyroX = (float)rawX * MPU_GYRO_RESOLUTION_DPS;
+    gyroY = (float)rawY * MPU_GYRO_RESOLUTION_DPS;
+    gyroZ = (float)rawZ * MPU_GYRO_RESOLUTION_DPS;
+
+    int16_t rawAx = 0;
+    int16_t rawAy = 0;
+    int16_t rawAz = 0;
+
+    mpu.getAcceleration(
+        &rawAx,
+        &rawAy,
+        &rawAz
+    );
+
+    accelX = (float)rawAx * MPU_ACCEL_RESOLUTION_G;
+    accelY = (float)rawAy * MPU_ACCEL_RESOLUTION_G;
+    accelZ = (float)rawAz * MPU_ACCEL_RESOLUTION_G;
+
+    #else
+
     qmi.getGyroscope(
         gyroX,
         gyroY,
@@ -115,6 +195,9 @@ void IMU::update()
     {
         return;
     }
+
+    #endif
+
 
     accelMagnitude = sqrtf(
         (accelX * accelX) +

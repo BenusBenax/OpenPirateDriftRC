@@ -2,7 +2,12 @@
 
 #include <Arduino.h>
 #include <Wire.h>
+
+#if !defined(OPENDRIFT_BOARD_HEADLESS)
 #include "SensorQMI8658.hpp"
+#else
+#include <MPU6050.h>
+#endif
 
 
 class IMU
@@ -36,7 +41,12 @@ public:
 
 private:
 
+    #if !defined(OPENDRIFT_BOARD_HEADLESS)
     SensorQMI8658 qmi;
+    #else
+    // GY-521 / MPU6050 wired to the standard ESP32 I2C pins.
+    MPU6050 mpu;
+    #endif
 
     float gyroX = 0;
     float gyroY = 0;
@@ -62,7 +72,11 @@ private:
     uint32_t lastUpdateMicros = 0;
 
 
-    #if defined(OPENDRIFT_BOARD_AMOLED_164)
+    #if defined(OPENDRIFT_BOARD_HEADLESS)
+    // GY-521 on a plain ESP32 DevKit: GPIO 21 = SDA, GPIO 22 = SCL.
+    static constexpr int SDA_PIN = 21;
+    static constexpr int SCL_PIN = 22;
+    #elif defined(OPENDRIFT_BOARD_AMOLED_164)
     static constexpr int SDA_PIN = 47;
     static constexpr int SCL_PIN = 48;
     #else
