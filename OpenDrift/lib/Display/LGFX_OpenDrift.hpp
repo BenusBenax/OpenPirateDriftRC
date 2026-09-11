@@ -1,5 +1,52 @@
 #pragma once
 
+// Stub for headless builds - no display
+#if defined(OPENDRIFT_BOARD_HEADLESS)
+
+#include <Arduino.h>
+
+// Define common color constants
+#define TFT_BLACK       0x0000
+#define TFT_WHITE       0xFFFF
+#define TFT_RED         0xF800
+#define TFT_GREEN       0x07E0
+#define TFT_BLUE        0x001F
+#define TFT_CYAN        0x07FF
+#define TFT_MAGENTA     0xF81F
+#define TFT_YELLOW      0xFFE0
+#define TFT_GRAY        0x8410
+
+class LGFX
+{
+public:
+    LGFX() {}
+    bool init() { return true; }
+    void setRotation(uint8_t r) {}
+    void fillScreen(uint16_t color) {}
+    void drawString(const char* string, int32_t x, int32_t y) {}
+    void drawCenterString(const char* string, int32_t x, int32_t y) {}
+    void drawFloat(float value, int digits, int32_t x, int32_t y) {}
+    void drawRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) {}
+    void drawFastHLine(int32_t x, int32_t y, int32_t w, uint16_t color) {}
+    void drawFastVLine(int32_t x, int32_t y, int32_t h, uint16_t color) {}
+    void setTextSize(uint8_t size) {}
+    void setTextWrap(bool wrap) {}
+    void setTextColor(uint16_t color) {}
+    void setCursor(int32_t x, int32_t y) {}
+    int16_t width() { return 0; }
+    int16_t height() { return 0; }
+    void startWrite() {}
+    void endWrite() {}
+    void writePixel(int32_t x, int32_t y, uint16_t color) {}
+    void writeFillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color) {}
+    void writeLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t color) {}
+    void setAddrWindow(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {}
+    void setColorDepth(uint8_t depth) {}
+    void setSwapBytes(bool swap) {}
+};
+
+#else
+
 #define LGFX_USE_V1
 
 #include <LovyanGFX.hpp>
@@ -23,7 +70,7 @@ public:
             return false;
         }
 
-        uint8_t initCommands[] =
+        uint8_t initCommands[]
         {
             0x11, 0 + CMD_INIT_DELAY, 80,
             0xC4, 1, 0x80,
@@ -270,5 +317,7 @@ public:
         setPanel(&_panel);
     }
 };
+
+#endif
 
 #endif

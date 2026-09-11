@@ -1,3 +1,4 @@
+#if !defined(OPENDRIFT_BOARD_HEADLESS)
 #include "Touch.h"
 
 
@@ -320,3 +321,5 @@ uint8_t Touch::getGesture()
 {
     return gesture;
 }
+
+#endif

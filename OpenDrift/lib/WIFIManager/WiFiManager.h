@@ -1,0 +1,1 @@
+/home/benus/Документы/projects/PirateDriftRC/OpenPirateDriftRC/OpenDrift/lib/WIFIManager/WIFIManager.h

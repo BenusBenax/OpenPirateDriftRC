@@ -2,6 +2,9 @@
 
 #include <Arduino.h>
 
+// Skip UI dependencies when building headless
+#if !defined(OPENDRIFT_BOARD_HEADLESS)
+
 #include "LGFX_OpenDrift.hpp"
 #include "Touch.h"
 #include "GyroController.h"
@@ -14,7 +17,6 @@
 
 class UI
 {
-
 public:
 
     void begin(
@@ -112,7 +114,6 @@ private:
 
 
 
-
     bool lastTouchState = false;
 
 
@@ -155,7 +156,6 @@ private:
 
 
 
-
     void drawPage(
         GyroController& gyro,
         WiFiManager& wifi,
@@ -187,12 +187,10 @@ private:
     );
 
 
-
     void drawMainPage(
         GyroController& gyro,
         Settings& settings
     );
-
 
 
     void drawCorePage(
@@ -219,11 +217,9 @@ private:
     bool isProfilesPage();
 
 
-
     void drawSystemPage(
         Settings& settings
     );
-
 
 
     void drawWifiPage(
@@ -260,9 +256,7 @@ private:
     );
 
 
-
     void drawPageDots();
-
 
 
     bool buttonPressed(
@@ -297,3 +291,51 @@ private:
     );
 
 };
+
+#else
+
+#include "LGFX_OpenDrift.hpp"
+#include "Touch.h"
+#include "GyroController.h"
+#include "IMU.h"
+#include "WiFiManager.h"
+#include "Settings.h"
+#include "RadioInput.h"
+#include "Servo.h"
+
+// Stub UI class for headless builds
+class UI
+{
+public:
+    UI() {}
+    UI(const UI&) {}
+    UI& operator=(const UI&) { return *this; }
+
+    void begin(
+        LGFX* display,
+        GyroController& gyro,
+        WiFiManager& wifi,
+        Settings& settings,
+        RadioInput& steeringRadio,
+        RadioInput& gainRadio,
+        ServoOutput& steeringServo
+    ) {}
+
+    void setThrottleRadio(
+        RadioInput& throttleRadio
+    ) {}
+
+    void requestRefresh() {}
+
+    void update(
+        Touch& touch,
+        GyroController& gyro,
+        IMU& imu,
+        WiFiManager& wifi,
+        Settings& settings,
+        RadioInput& steeringRadio,
+        RadioInput& gainRadio
+    ) {}
+};
+
+#endif

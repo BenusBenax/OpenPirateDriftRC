@@ -2,6 +2,23 @@
 
 #include <Arduino.h>
 
+// Stub Touch class for headless builds
+#if defined(OPENDRIFT_BOARD_HEADLESS)
+
+class Touch
+{
+public:
+    Touch() {}
+    bool begin() { return true; }
+    void update() {}
+    bool isTouched() { return false; }
+    uint16_t getX() { return 0; }
+    uint16_t getY() { return 0; }
+    uint8_t getGesture() { return 0; }
+};
+
+#else
+
 #if defined(OPENDRIFT_BOARD_AMOLED_164)
 #include <Wire.h>
 
@@ -35,7 +52,6 @@ enum GESTURE {
 #endif
 
 
-
 class Touch
 {
 public:
@@ -53,10 +69,11 @@ public:
 
     uint16_t getX();
 
+
     uint16_t getY();
 
-    uint8_t getGesture();
 
+    uint8_t getGesture();
 
 
 private:
@@ -91,3 +108,5 @@ private:
 
     unsigned long lastEventMs = 0;
 };
+
+#endif

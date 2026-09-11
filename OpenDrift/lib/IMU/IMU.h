@@ -9,6 +9,10 @@ class IMU
 {
 public:
 
+    IMU() {}
+    IMU(const IMU&) {}
+    IMU& operator=(const IMU&) { return *this; }
+
     bool begin();
 
     bool setGyroLpfMode(uint8_t mode);

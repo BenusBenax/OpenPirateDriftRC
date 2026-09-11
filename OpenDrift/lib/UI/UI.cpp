@@ -1,3 +1,4 @@
+#if !defined(OPENDRIFT_BOARD_HEADLESS)
 #include "UI.h"
 
 static constexpr uint16_t ROUND_CYAN = 0x07FF;
@@ -6821,3 +6822,5 @@ void UI::update(
         touched;
 
 }
+
+#endif
