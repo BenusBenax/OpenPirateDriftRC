@@ -1833,7 +1833,12 @@ void setup()
             steeringRadio,
             gainRadio,
             throttleRadio,
-            blackbox
+            blackbox,
+            &imu,
+            imuOk
+            #if defined(OPENDRIFT_INPUT_CRSF)
+            , &crsf
+            #endif
         );
 
         bootConsole.log(
@@ -2019,7 +2024,12 @@ void loop()
             steeringRadio,
             gainRadio,
             throttleRadio,
-            blackbox
+            blackbox,
+            &imu,
+            imuOk
+            #if defined(OPENDRIFT_INPUT_CRSF)
+            , &crsf
+            #endif
         );
     }
 

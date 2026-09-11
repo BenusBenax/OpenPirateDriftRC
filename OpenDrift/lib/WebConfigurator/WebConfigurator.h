@@ -7,6 +7,8 @@
 #include "GyroController.h"
 #include "RadioInput.h"
 #include "BlackboxLogger.h"
+#include "IMU.h"
+#include "CrsfInput.h"
 
 
 class WebConfigurator
@@ -21,7 +23,10 @@ public:
         RadioInput& steeringRadio,
         RadioInput& gainRadio,
         RadioInput& throttleRadio,
-        BlackboxLogger& blackbox
+        BlackboxLogger& blackbox,
+        IMU* imuRef = nullptr,
+        bool imuReady = false,
+        CrsfInput* crsfRef = nullptr
     );
 
     void update();
@@ -44,6 +49,12 @@ private:
     RadioInput* throttleRadio = nullptr;
 
     BlackboxLogger* blackbox = nullptr;
+
+    IMU* imu = nullptr;
+
+    bool imuOk = false;
+
+    CrsfInput* crsf = nullptr;
 
     bool running = false;
 

@@ -19,7 +19,10 @@ void WebConfigurator::begin(
     RadioInput& steeringRadioRef,
     RadioInput& gainRadioRef,
     RadioInput& throttleRadioRef,
-    BlackboxLogger& blackboxRef
+    BlackboxLogger& blackboxRef,
+    IMU* imuRef,
+    bool imuReadyRef,
+    CrsfInput* crsfRef
 )
 {
     settings =
@@ -39,6 +42,15 @@ void WebConfigurator::begin(
 
     blackbox =
         &blackboxRef;
+
+    imu =
+        imuRef;
+
+    imuOk =
+        imuReadyRef;
+
+    crsf =
+        crsfRef;
 
     server.on(
         "/",
@@ -175,6 +187,7 @@ void WebConfigurator::handleRoot()
     html += F("label{display:block;font-size:13px;color:#c8cdd2;margin:12px 0 5px}input,select{width:100%;box-sizing:border-box;background:#0b0d10;color:#fff;border:1px solid #3b4148;border-radius:6px;padding:10px;font-size:16px}");
     html += F("input[type=checkbox]{width:auto;transform:scale(1.3);margin-right:8px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}");
     html += F(".status{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pill{background:#0b0d10;border:1px solid #33383f;border-radius:6px;padding:10px}");
+    html += F(".ok{color:#3ecf8e;font-weight:700}.bad{color:#e05555;font-weight:700}.dim{color:#aeb4bb;font-size:12px}.sens{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:10px;background:#0b0d10;border:1px solid #33383f;border-radius:6px;margin:6px 0}");
     html += F("button{width:100%;padding:13px 16px;border:0;border-radius:6px;background:#24a36b;color:#fff;font-size:17px;font-weight:700;margin-top:16px}");
     html += F(".profile{display:grid;grid-template-columns:1fr 96px 82px;gap:8px;align-items:center;background:#0b0d10;border:1px solid #33383f;border-radius:6px;padding:9px;margin:8px 0}.profile.active{border-color:#24a36b}.profile strong{display:block}.profile small{color:#aeb4bb}.profile form{margin:0}.profile button{margin:0;padding:9px 6px;font-size:13px}.profile .danger{background:#973b45}.create-profile{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:end}.create-profile button{margin:0;height:43px}");
     html += F("a{color:#65b7ff}@media(max-width:560px){.row,.status,.create-profile{grid-template-columns:1fr}.profile{grid-template-columns:1fr 1fr}.profile>div{grid-column:1/-1}}");
@@ -213,6 +226,18 @@ void WebConfigurator::handleRoot()
         : F("GAIN INPUT");
     #endif
     html += F("</div></div></div>");
+html += F("<div class='card'><h2>Sensors</h2>");
+
+    #if defined(OPENDRIFT_INPUT_CRSF)
+    html += F("<div class='sens'><div>ELRS receiver <span class='dim'>ExpressLRS / CRSF</span></div><div id='elrsPill' class='bad'>Checking...</div></div>");
+    html += F("<p class='sub'><span class='dim'>Frames:</span> <span id='elrsFrames'>-</span> &middot; <span class='dim'>CRC errors:</span> <span id='elrsCrc'>-</span> &middot; <span class='dim'>Frame age:</span> <span id='elrsAge'>-</span></p>");
+    #else
+    html += F("<div class='sens'><div>ELRS receiver <span class='dim'>not used (PWM input build)</span></div><div id='elrsPill' class='dim'>N/A</div></div>");
+    #endif
+
+    html += F("<div class='sens'><div>Gyro / IMU</div><div id='imuPill' class='bad'>Checking...</div></div>");
+    html += F("<p class='sub'><span class='dim'>Gyro X:</span> <span id='gyroX'>-</span> &middot; <span class='dim'>Gyro Y:</span> <span id='gyroY'>-</span> &middot; <span class='dim'>Yaw rate:</span> <span id='yawRate'>-</span> &middot; <span class='dim'>Accel mag:</span> <span id='accelMag'>-</span></p>");
+    html += F("</div>");
 
     html += F("<div class='card'><h2>Driving Profiles</h2><p class='sub'>Active: <strong>");
     html += settings->getActiveProfileName();
@@ -463,7 +488,7 @@ void WebConfigurator::handleRoot()
 
     html += F("</div>");
 
-    html += F("</main><script>function updateLive(){fetch('/live-status',{cache:'no-store'}).then(r=>r.json()).then(s=>{document.getElementById('activeGain').textContent=Number(s.gain).toFixed(2);document.getElementById('gainOverride').textContent=s.override?'CH3 gain override active':'Saved gain active';}).catch(()=>{});}updateLive();setInterval(updateLive,500);</script></body></html>");
+    html += F("</main><script>function updateLive(){fetch('/live-status',{cache:'no-store'}).then(r=>r.json()).then(s=>{document.getElementById('activeGain').textContent=Number(s.gain).toFixed(2);document.getElementById('gainOverride').textContent=s.override?'CH3 gain override active':'Saved gain active';function setPill(id,txt,ok){var el=document.getElementById(id);if(!el)return;el.textContent=txt;el.className=ok?'ok':'bad';}if(s.elrs&&s.elrs.present){setPill('elrsPill',s.elrs.connected?('Connected'+(s.elrs.lq>0?' &middot; LQ '+s.elrs.lq+'%':'')+(s.elrs.snr!==0?' &middot; '+s.elrs.snr+'dB':'')):'No signal',s.elrs.connected);var f=document.getElementById('elrsFrames');if(f)f.textContent=s.elrs.frames;var c=document.getElementById('elrsCrc');if(c){c.textContent=s.elrs.crcErrors;c.className=s.elrs.crcErrors>0?'bad':'dim';}var a=document.getElementById('elrsAge');if(a)a.textContent=s.elrs.frameAgeMs+' ms';}else{setPill('elrsPill','N/A',true);}if(s.imu){setPill('imuPill',s.imu.ready?'Ready':'Module not found',s.imu.ready);var gx=document.getElementById('gyroX');if(gx)gx.textContent=s.imu.gyroX;var gy=document.getElementById('gyroY');if(gy)gy.textContent=s.imu.gyroY;var yr=document.getElementById('yawRate');if(yr)yr.textContent=s.imu.yawRate;var am=document.getElementById('accelMag');if(am)am.textContent=s.imu.accelMag;}}).catch(()=>{});}updateLive();setInterval(updateLive,500);</script></body></html>");
 
     server.send(
         200,
@@ -499,13 +524,53 @@ void WebConfigurator::handleLiveStatus()
     #endif
 
     String json;
-    json.reserve(72);
+    json.reserve(360);
     json += F("{\"gain\":");
     json += String(gyro->getGain(), 2);
     json += F(",\"pulse\":");
     json += String(gainRadio->getPulseWidth());
     json += F(",\"override\":");
     json += gainOverride ? F("true") : F("false");
+
+    // IMU / gyro sensor status
+    json += F(",\"imu\":{");
+    bool imuReady = (imu != nullptr) && imuOk && imu->isReady();
+    json += F("\"ready\":");
+    json += imuReady ? F("true") : F("false");
+    json += F(",\"gyroX\":");
+    json += imuReady ? String(imu->getGyroX(), 2) : String(0.0f, 2);
+    json += F(",\"gyroY\":");
+    json += imuReady ? String(imu->getGyroY(), 2) : String(0.0f, 2);
+    json += F(",\"yawRate\":");
+    json += imuReady ? String(imu->getYawRate(), 2) : String(0.0f, 2);
+    json += F(",\"accelMag\":");
+    json += imuReady ? String(imu->getAccelMagnitude(), 2) : String(0.0f, 2);
+    json += F("}");
+
+    // CRSF / ELRS receiver status
+    #if defined(OPENDRIFT_INPUT_CRSF)
+    bool crsfPresent = (crsf != nullptr);
+    bool crsfConnected = crsfPresent && crsf->hasSignal();
+    json += F(",\"elrs\":{");
+    json += F("\"present\":");
+    json += crsfPresent ? F("true") : F("false");
+    json += F(",\"connected\":");
+    json += crsfConnected ? F("true") : F("false");
+    json += F(",\"frameAgeMs\":");
+    json += crsfPresent ? String(crsf->getFrameAgeMs()) : String(0);
+    json += F(",\"lq\":");
+    json += crsfConnected ? String((int)crsf->getUplinkLinkQuality()) : String(0);
+    json += F(",\"snr\":");
+    json += crsfConnected ? String((int)crsf->getUplinkSnr()) : String(0);
+    json += F(",\"frames\":");
+    json += crsfPresent ? String(crsf->getValidFrameCount()) : String(0);
+    json += F(",\"crcErrors\":");
+    json += crsfPresent ? String(crsf->getCrcErrorCount()) : String(0);
+    json += F("}");
+    #else
+    json += F(",\"elrs\":null");
+    #endif
+
     json += F("}");
 
     server.sendHeader(
