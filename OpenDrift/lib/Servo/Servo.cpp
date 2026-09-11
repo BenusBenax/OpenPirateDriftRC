@@ -16,14 +16,16 @@ bool ServoOutput::begin(
         )
     );
 
-    int channel =
-        servo.attach(
+    // ESP32Servo allocates LEDC channel 0 first, and channel 0 is a valid
+    // channel number on ESP32-C3. Test actual attachment state instead of
+    // treating channel 0 as an error.
+    servo.attach(
         pin,
         1000,
         2000
     );
 
-    if(channel == 0)
+    if(!servo.attached())
     {
         return false;
     }

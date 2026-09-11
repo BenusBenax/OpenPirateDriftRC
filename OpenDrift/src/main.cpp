@@ -145,7 +145,8 @@ static constexpr int CRSF_THROTTLE_NEUTRAL_BAND_US = 50;
 #else
     #if defined(OPENDRIFT_BOARD_C3)
     // ESP32-C3 PWM receiver inputs: GPIO20 (steering) and GPIO21 (throttle).
-    #define SERVO_OUTPUT_PIN 0
+    // GPIO2: steering servo output (C3 servo-capable, unlike GPIO0).
+    #define SERVO_OUTPUT_PIN 2
     #define RADIO_STEERING_PIN 20
     #define RADIO_THROTTLE_PIN 21
     #elif defined(OPENDRIFT_AMOLED_V2)
@@ -1219,8 +1220,9 @@ void setup()
     Serial.println(")");
 
     #if !defined(OPENDRIFT_BOARD_AMOLED_164)
-    pinMode(2, OUTPUT);
-    digitalWrite(2, HIGH);
+    // GPIO3: boot indicator LED. GPIO2 is reserved for the steering servo.
+    pinMode(3, OUTPUT);
+    digitalWrite(3, HIGH);
     #endif
 
     bool displayOk = false;
@@ -1503,7 +1505,7 @@ void setup()
             #endif
             #else
             #if defined(OPENDRIFT_BOARD_C3)
-            "ledc: steering servo output attached on gpio0"
+            "ledc: steering servo output attached on gpio2"
             #elif defined(OPENDRIFT_AMOLED_V2)
             "ledc: steering servo output attached on gpio1"
             #else
