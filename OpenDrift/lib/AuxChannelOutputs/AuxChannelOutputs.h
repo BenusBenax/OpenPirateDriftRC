@@ -2,6 +2,41 @@
 
 #include <Arduino.h>
 
+#if defined(OPENDRIFT_BOARD_C3)
+
+// The auxiliary-channel implementation uses MCPWM, which is unavailable on ESP32-C3.
+class Settings;
+class CrsfInput;
+
+class AuxChannelOutputs
+{
+public:
+    bool begin(Settings& settings)
+    {
+        (void)settings;
+        return true;
+    }
+
+    void update(
+        Settings& settings,
+        const CrsfInput& crsf,
+        bool signalValid
+    )
+    {
+        (void)settings;
+        (void)crsf;
+        (void)signalValid;
+    }
+
+    static bool isPinAvailable(uint8_t gpio)
+    {
+        (void)gpio;
+        return false;
+    }
+};
+
+#else
+
 #include "CrsfInput.h"
 #include "Settings.h"
 
@@ -48,3 +83,6 @@ private:
         uint16_t pulse
     );
 };
+
+
+#endif

@@ -18,7 +18,7 @@
 #if defined(OPENDRIFT_INPUT_CRSF)
 #include "CrsfInput.h"
 #include "CrsfParameterDevice.h"
-#if defined(OPENDRIFT_BOARD_AMOLED_164)
+#if defined(OPENDRIFT_BOARD_AMOLED_164) && !defined(OPENDRIFT_BOARD_C3)
 #include "AuxChannelOutputs.h"
 #endif
 #endif
@@ -111,24 +111,30 @@ TaskHandle_t crsfTaskHandle = nullptr;
 #endif
 
 #if defined(OPENDRIFT_INPUT_CRSF)
-#if defined(OPENDRIFT_CRSF_OOPS_SWAPPED_PINS)
-#define SERVO_OUTPUT_PIN 16
-#define CRSF_RX_PIN 17
-#define CRSF_TX_PIN 18
-#define CRSF_THROTTLE_OUTPUT_PIN 15
-#elif defined(OPENDRIFT_AMOLED_V2)
-// V2 connects the IMU and touch interrupt outputs to GPIO17/18. Keep the
-// receiver UART off those lines to prevent electrical contention.
-#define SERVO_OUTPUT_PIN 15
-#define CRSF_RX_PIN 1
-#define CRSF_TX_PIN 2
-#define CRSF_THROTTLE_OUTPUT_PIN 16
-#else
-#define SERVO_OUTPUT_PIN 15
-#define CRSF_RX_PIN 17
-#define CRSF_TX_PIN 18
-#define CRSF_THROTTLE_OUTPUT_PIN 16
-#endif
+    #if defined(OPENDRIFT_BOARD_C3)
+    // ESP32-C3: GPIO20 is the receiver UART RX, GPIO21 is the UART TX.
+    #define SERVO_OUTPUT_PIN 0
+    #define CRSF_RX_PIN 20
+    #define CRSF_TX_PIN 21
+    #define CRSF_THROTTLE_OUTPUT_PIN 1
+    #elif defined(OPENDRIFT_CRSF_OOPS_SWAPPED_PINS)
+    #define SERVO_OUTPUT_PIN 16
+    #define CRSF_RX_PIN 17
+    #define CRSF_TX_PIN 18
+    #define CRSF_THROTTLE_OUTPUT_PIN 15
+    #elif defined(OPENDRIFT_AMOLED_V2)
+    // V2 connects the IMU and touch interrupt outputs to GPIO17/18. Keep the
+    // receiver UART off those lines to prevent electrical contention.
+    #define SERVO_OUTPUT_PIN 15
+    #define CRSF_RX_PIN 1
+    #define CRSF_TX_PIN 2
+    #define CRSF_THROTTLE_OUTPUT_PIN 16
+    #else
+    #define SERVO_OUTPUT_PIN 15
+    #define CRSF_RX_PIN 17
+    #define CRSF_TX_PIN 18
+    #define CRSF_THROTTLE_OUTPUT_PIN 16
+    #endif
 static constexpr uint8_t CRSF_STEERING_CHANNEL = 0;
 static constexpr uint8_t CRSF_THROTTLE_CHANNEL = 1;
 static constexpr uint8_t CRSF_GAIN_CHANNEL = 2;
@@ -136,15 +142,26 @@ static constexpr uint32_t CRSF_SIGNAL_TIMEOUT_MS = 50;
 static constexpr uint32_t CRSF_THROTTLE_NEUTRAL_MS = 500;
 static constexpr int CRSF_THROTTLE_NEUTRAL_BAND_US = 50;
 #else
-#if defined(OPENDRIFT_AMOLED_V2)
-#define SERVO_OUTPUT_PIN 1
-#else
-#define SERVO_OUTPUT_PIN 17
+    #if defined(OPENDRIFT_BOARD_C3)
+    // ESP32-C3 PWM receiver inputs: GPIO20 (steering) and GPIO21 (throttle).
+    #define SERVO_OUTPUT_PIN 0
+    #define RADIO_STEERING_PIN 20
+    #define RADIO_THROTTLE_PIN 21
+    #elif defined(OPENDRIFT_AMOLED_V2)
+    // AMOLED V2 pins
+    #define SERVO_OUTPUT_PIN 1
+    #else
+    // Original round display / other ESP32 pins
+    #define SERVO_OUTPUT_PIN 17
+    #endif
+    #if !defined(OPENDRIFT_BOARD_C3)
+    #define RADIO_STEERING_PIN 15
+    #define RADIO_THROTTLE_PIN 16
+    #endif
 #endif
-#define RADIO_STEERING_PIN 15
-#define RADIO_THROTTLE_PIN 16
-#endif
-#if defined(OPENDRIFT_AMOLED_V2)
+#if defined(OPENDRIFT_BOARD_C3)
+#define SHARED_GAIN_THROTTLE_PIN 1
+#elif defined(OPENDRIFT_AMOLED_V2)
 #define SHARED_GAIN_THROTTLE_PIN 2
 #else
 #define SHARED_GAIN_THROTTLE_PIN 18
@@ -1434,7 +1451,9 @@ void setup()
         "ledc: steering servo output attached on gpio15"
         #endif
         #else
-        #if defined(OPENDRIFT_AMOLED_V2)
+        #if defined(OPENDRIFT_BOARD_C3)
+        "ledc: steering servo output attached on gpio0"
+        #elif defined(OPENDRIFT_AMOLED_V2)
         "ledc: steering servo output attached on gpio1"
         #else
         "ledc: steering servo output attached on gpio17"

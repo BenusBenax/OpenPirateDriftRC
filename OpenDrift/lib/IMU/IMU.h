@@ -73,9 +73,15 @@ private:
 
 
     #if defined(OPENDRIFT_BOARD_HEADLESS)
-    // GY-521 on a plain ESP32 DevKit: GPIO 21 = SDA, GPIO 22 = SCL.
-    static constexpr int SDA_PIN = 21;
-    static constexpr int SCL_PIN = 22;
+        #if defined(OPENDRIFT_BOARD_C3)
+        // ESP32-C3: GPIO 6 (SDA) / GPIO 7 (SCL) for I2C
+        static constexpr int SDA_PIN = 6;
+        static constexpr int SCL_PIN = 7;
+        #else
+        // Generic ESP32: GPIO 21 (SDA) / GPIO 22 (SCL) for I2C
+        static constexpr int SDA_PIN = 21;
+        static constexpr int SCL_PIN = 22;
+        #endif
     #elif defined(OPENDRIFT_BOARD_AMOLED_164)
     static constexpr int SDA_PIN = 47;
     static constexpr int SCL_PIN = 48;

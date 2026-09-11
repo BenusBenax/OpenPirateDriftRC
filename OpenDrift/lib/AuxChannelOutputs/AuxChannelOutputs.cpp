@@ -1,5 +1,7 @@
 #include "AuxChannelOutputs.h"
 
+#if !defined(OPENDRIFT_BOARD_C3)
+
 #include <driver/mcpwm.h>
 
 
@@ -267,3 +269,6 @@ void AuxChannelOutputs::writeOutput(
         lastPulse[slot] = pulse;
     }
 }
+
+
+#endif
