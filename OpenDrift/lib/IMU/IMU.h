@@ -19,6 +19,7 @@ public:
     IMU& operator=(const IMU&) { return *this; }
 
     bool begin();
+    bool isReady() const;
 
     bool setGyroLpfMode(uint8_t mode);
     uint8_t getGyroLpfMode() const;
@@ -66,6 +67,8 @@ private:
     float surfaceDisturbanceScore = 0;
 
     bool accelFilterReady = false;
+
+    bool initialized = false;
 
     uint8_t gyroLpfMode = 0;
 

@@ -13,18 +13,38 @@ static constexpr float MPU_ACCEL_RESOLUTION_G = 4.0f / 32768.0f;
 
 bool IMU::begin()
 {
+    initialized = false;
+
+    // Weak pullups keep an unpopulated I2C bus deterministic while the
+    // address probe below prevents initialize() from running without a sensor.
+    pinMode(SDA_PIN, INPUT_PULLUP);
+    pinMode(SCL_PIN, INPUT_PULLUP);
+    delay(10);
+
     Wire.begin(SDA_PIN, SCL_PIN);
 
 
     #if defined(OPENDRIFT_BOARD_HEADLESS)
 
-    // MPU6050 (GY-521) has no begin() helper; probe the bus, then configure.
-    if(!mpu.testConnection())
+    // MPU6050 (GY-521) has no begin() helper; probe the bus before configuring
+    // it. A missing sensor must not reach initialize(), which can otherwise
+    // leave the ESP waiting on an unacknowledged I2C transaction.
+    Wire.setTimeOut(100);
+    Wire.beginTransmission(MPU6050_DEFAULT_ADDRESS);
+    bool mpuPresent =
+        Wire.endTransmission() == 0;
+
+    if(!mpuPresent || !mpu.testConnection())
     {
         return false;
     }
 
     mpu.initialize();
+
+    if(!mpu.testConnection())
+    {
+        return false;
+    }
 
     mpu.setFullScaleGyroRange(
         MPU6050_GYRO_FS_1000
@@ -35,6 +55,7 @@ bool IMU::begin()
     );
 
     gyroLpfMode = 0;
+    initialized = true;
 
     return true;
 
@@ -50,18 +71,24 @@ bool IMU::begin()
     }
 
 
-    qmi.configAccelerometer(
+    if(!qmi.configAccelerometer(
         SensorQMI8658::ACC_RANGE_4G,
         SensorQMI8658::ACC_ODR_1000Hz,
         SensorQMI8658::LPF_MODE_0
-    );
+    ))
+    {
+        return false;
+    }
 
 
-    qmi.configGyroscope(
+    if(!qmi.configGyroscope(
         SensorQMI8658::GYR_RANGE_1024DPS,
         SensorQMI8658::GYR_ODR_896_8Hz,
         SensorQMI8658::LPF_MODE_0
-    );
+    ))
+    {
+        return false;
+    }
 
     gyroLpfMode = 0;
 
@@ -69,6 +96,7 @@ bool IMU::begin()
     qmi.enableAccelerometer();
     qmi.enableGyroscope();
 
+    initialized = true;
 
     return true;
 
@@ -76,8 +104,19 @@ bool IMU::begin()
 }
 
 
+bool IMU::isReady() const
+{
+    return initialized;
+}
+
+
 bool IMU::setGyroLpfMode(uint8_t mode)
 {
+    if(!initialized)
+    {
+        return false;
+    }
+
     mode = constrain(mode, 0, 2);
 
     #if defined(OPENDRIFT_BOARD_HEADLESS)
@@ -126,6 +165,11 @@ uint8_t IMU::getGyroLpfMode() const
 
 void IMU::update()
 {
+    if(!initialized)
+    {
+        return;
+    }
+
     uint32_t now = micros();
 
     float dt = 0.01f;

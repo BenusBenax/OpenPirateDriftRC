@@ -71,6 +71,7 @@ bool blackboxStartAttempted = false;
 
 static uint32_t controlLoopHz = 250;
 static uint32_t controlLoopPeriodMs = 4;
+static bool imuOk = false;
 
 #if defined(OPENDRIFT_BOARD_AMOLED_164)
 static constexpr uint8_t STARTUP_RETRY_COUNT = 3;
@@ -900,27 +901,6 @@ void runControlIteration()
         settings.getGyroHuntStrength()
     );
 
-    if(i2cBusMutex != nullptr)
-    {
-        xSemaphoreTake(
-            i2cBusMutex,
-            portMAX_DELAY
-        );
-    }
-
-    imu.setGyroLpfMode(
-        settings.getGyroLpfMode()
-    );
-
-    imu.update();
-
-    if(i2cBusMutex != nullptr)
-    {
-        xSemaphoreGive(
-            i2cBusMutex
-        );
-    }
-
     #if defined(OPENDRIFT_INPUT_CRSF)
     bool steeringSignal = crsfSignal;
     bool throttleSignal = crsfSignal;
@@ -950,20 +930,49 @@ void runControlIteration()
                 settings
             );
     }
-    float yaw =
-        imu.getYawRate();
 
-    int gyroCorrection =
-        gyro.update(
-            yaw,
-            steeringCommand,
-            steeringSignal,
-            throttlePulse,
-            throttleSignal
+    float yaw = 0.0f;
+    int gyroCorrection = 0;
+
+    if(imuOk)
+    {
+        if(i2cBusMutex != nullptr)
+        {
+            xSemaphoreTake(
+                i2cBusMutex,
+                portMAX_DELAY
+            );
+        }
+
+        imu.setGyroLpfMode(
+            settings.getGyroLpfMode()
         );
 
+        imu.update();
+
+        if(i2cBusMutex != nullptr)
+        {
+            xSemaphoreGive(
+                i2cBusMutex
+            );
+        }
+
+        yaw = imu.getYawRate();
+
+        gyroCorrection =
+            gyro.update(
+                yaw,
+                steeringCommand,
+                steeringSignal,
+                throttlePulse,
+                throttleSignal
+            );
+    }
+
     int requestedGyroCorrection =
-        gyro.getRequestedCorrection();
+        imuOk
+        ? gyro.getRequestedCorrection()
+        : 0;
 
     if(settings.getGyroReverse())
     {
@@ -1172,6 +1181,8 @@ void updateBlackboxAvailability()
 
 void setup()
 {
+    delay(3000);
+
     Serial.begin(115200);
 
     #if defined(OPENDRIFT_BOARD_AMOLED_164)
@@ -1296,7 +1307,6 @@ void setup()
     // IMU
     //-------------------
 
-    bool imuOk = false;
 
     #if defined(OPENDRIFT_BOARD_AMOLED_164)
     for(uint8_t attempt = 1; attempt <= STARTUP_RETRY_COUNT; attempt++)
@@ -1329,6 +1339,14 @@ void setup()
 
     if(!imuOk)
     {
+        #if defined(OPENDRIFT_BOARD_HEADLESS)
+        Serial.println("MPU6050 not found; continuing without IMU");
+        bootConsole.log(
+            "mpu6050: probe failed; continuing without IMU",
+            "[WARN]",
+            TFT_YELLOW
+        );
+        #else
         bootConsole.log(
             "qmi8658: probe failed; safe reboot",
             "[FAIL]",
@@ -1342,13 +1360,22 @@ void setup()
         Serial.flush();
         delay(1500);
         esp_restart();
+        #endif
     }
+    else
+    {
+        Serial.println("IMU OK");
 
-    Serial.println("IMU OK");
-
-    bootConsole.log(
-        "qmi8658: 6-axis inertial sensor ready"
-    );
+        #if defined(OPENDRIFT_BOARD_HEADLESS)
+        bootConsole.log(
+            "mpu6050: 6-axis inertial sensor ready"
+        );
+        #else
+        bootConsole.log(
+            "qmi8658: 6-axis inertial sensor ready"
+        );
+        #endif
+    }
 
     //-------------------
     // TOUCH
@@ -1669,25 +1696,45 @@ void setup()
     // CALIBRATION
     //-------------------
 
-    bootConsole.log(
-        "qmi8658: measuring stationary gyro bias",
-        "[....]",
-        TFT_CYAN
-    );
+    if(imuOk)
+    {
+        bootConsole.log(
+            #if defined(OPENDRIFT_BOARD_HEADLESS)
+            "mpu6050: measuring stationary gyro bias",
+            #else
+            "qmi8658: measuring stationary gyro bias",
+            #endif
+            "[....]",
+            TFT_CYAN
+        );
 
-    delay(2000);
+        delay(2000);
 
-    imu.update();
+        imu.update();
 
-    gyro.calibrate(
-        imu.getYawRate()
-    );
+        gyro.calibrate(
+            imu.getYawRate()
+        );
 
-    Serial.println("Gyro calibrated");
+        Serial.println("Gyro calibrated");
 
-    bootConsole.log(
-        "qmi8658: gyro bias calibration complete"
-    );
+        bootConsole.log(
+            #if defined(OPENDRIFT_BOARD_HEADLESS)
+            "mpu6050: gyro bias calibration complete"
+            #else
+            "qmi8658: gyro bias calibration complete"
+            #endif
+        );
+    }
+    else
+    {
+        Serial.println("IMU unavailable; gyro correction disabled");
+        bootConsole.log(
+            "imu: gyro correction disabled",
+            "[SKIP]",
+            TFT_YELLOW
+        );
+    }
 
     delay(500);
 
