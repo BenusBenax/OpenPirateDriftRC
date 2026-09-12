@@ -214,17 +214,18 @@ void WebConfigurator::handleRoot()
 
     html += F("<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>");
     html += F("<title>PirateDriftRC Config</title><style>");
-    html += F("body{font-family:system-ui,Arial,sans-serif;margin:0;background:#101214;color:#f5f5f5}");
+    html += F("body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0d1117;color:#e8e3d9}");
     html += F("main{max-width:760px;margin:0 auto;padding:18px}");
     html += F("h1{font-size:28px;margin:8px 0 2px}h2{font-size:18px;margin:22px 0 10px}");
-    html += F(".sub{color:#aeb4bb;margin-bottom:20px}.card{border:1px solid #33383f;border-radius:8px;padding:14px;margin:12px 0;background:#171a1f}");
-    html += F("label{display:block;font-size:13px;color:#c8cdd2;margin:12px 0 5px}input,select{width:100%;box-sizing:border-box;background:#0b0d10;color:#fff;border:1px solid #3b4148;border-radius:6px;padding:10px;font-size:16px}");
-    html += F("input[type=checkbox]{width:auto;transform:scale(1.3);margin-right:8px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}");
-    html += F(".status{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pill{background:#0b0d10;border:1px solid #33383f;border-radius:6px;padding:10px}");
-    html += F(".ok{color:#3ecf8e;font-weight:700}.bad{color:#e05555;font-weight:700}.dim{color:#aeb4bb;font-size:12px}.sens{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:10px;background:#0b0d10;border:1px solid #33383f;border-radius:6px;margin:6px 0}");
-    html += F("button{width:100%;padding:13px 16px;border:0;border-radius:6px;background:#24a36b;color:#fff;font-size:17px;font-weight:700;margin-top:16px}");
-    html += F(".profile{display:grid;grid-template-columns:1fr 96px 82px;gap:8px;align-items:center;background:#0b0d10;border:1px solid #33383f;border-radius:6px;padding:9px;margin:8px 0}.profile.active{border-color:#24a36b}.profile strong{display:block}.profile small{color:#aeb4bb}.profile form{margin:0}.profile button{margin:0;padding:9px 6px;font-size:13px}.profile .danger{background:#973b45}.create-profile{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:end}.create-profile button{margin:0;height:43px}");
-    html += F("a{color:#65b7ff}footer{text-align:center;color:#7c828a;font-size:12px;margin:26px 0 8px}.fork .from{color:#aeb4bb}");
+    html += F(".sub{color:#8b949e;margin-bottom:20px}.card{border:1px solid #30363d;border-radius:4px;padding:14px;margin:12px 0;background:#161b22}");
+    html += F("label{display:block;font-size:13px;color:#e8e3d9;margin:12px 0 5px}input,select{width:100%;box-sizing:border-box;background:#0d1117;color:#e8e3d9;border:1px solid #30363d;border-radius:4px;padding:10px;font-size:16px}");
+    html += F("input[type=checkbox]{width:auto;transform:scale(1.3);margin-right:8px;accent-color:#c5a059}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}");
+    html += F(".status{display:grid;grid-template-columns:1fr 1fr;gap:8px}.pill{background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:10px}");
+    html += F(".ok{color:#c5a059;font-weight:700}.bad{color:#9e2a2b;font-weight:700}.dim{color:#8b949e;font-size:12px}.sens{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:10px;background:#0d1117;border:1px solid #30363d;border-radius:4px;margin:6px 0}");
+    html += F("button{width:100%;padding:13px 16px;border:0;border-radius:4px;background:#c5a059;color:#0d1117;font-size:17px;font-weight:700;margin-top:16px;cursor:pointer}");
+    html += F(".tabs{display:flex;gap:8px;margin:18px 0 0}.tab-btn{width:auto;background:#161b22;color:#8b949e;border:1px solid #30363d;border-radius:4px;padding:11px 16px;font-size:15px;font-weight:600;cursor:pointer;flex:1;text-align:center;margin:0}.tab-btn.active{background:#c5a059;border-color:#c5a059;color:#0d1117}.tab-content{display:none}.tab-content.active{display:block}");
+    html += F(".profile{display:grid;grid-template-columns:1fr 96px 82px;gap:8px;align-items:center;background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:9px;margin:8px 0}.profile.active{border-color:#c5a059}.profile strong{display:block}.profile small{color:#8b949e}.profile form{margin:0}.profile button{margin:0;padding:9px 6px;font-size:13px}.profile .danger{background:#9e2a2b}.create-profile{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:end}.create-profile button{margin:0;height:43px}");
+    html += F("a{color:#65b7ff}footer{text-align:center;color:#8b949e;font-size:12px;margin:26px 0 8px}.fork .from{color:#8b949e}");
     html += F("a{color:#65b7ff}@media(max-width:560px){.row,.status,.create-profile{grid-template-columns:1fr}.profile{grid-template-columns:1fr 1fr}.profile>div{grid-column:1/-1}}");
     html += F("</style></head><body><main>");
     html += F("<h1>PirateDriftRC</h1><div class='sub'>Web configurator</div>");
@@ -274,6 +275,11 @@ html += F("<div class='card'><h2>Sensors</h2>");
     html += F("<p class='sub'><span class='dim'>Gyro X:</span> <span id='gyroX'>-</span> &middot; <span class='dim'>Gyro Y:</span> <span id='gyroY'>-</span> &middot; <span class='dim'>Yaw rate:</span> <span id='yawRate'>-</span> &middot; <span class='dim'>Accel mag:</span> <span id='accelMag'>-</span></p>");
     html += F("</div>");
 
+    html += F("<form method='post' action='/save'>");
+    html += F("<div class='tabs'><button type='button' class='tab-btn active' data-tab='tab-tune' onclick='switchTab(\"tab-tune\")'>Tune</button><button type='button' class='tab-btn' data-tab='tab-hw' onclick='switchTab(\"tab-hw\")'>Hardware</button></div>");
+    html += F("<script>function switchTab(id){var btns=document.querySelectorAll('.tab-btn');for(var i=0;i<btns.length;i++){btns[i].classList.toggle('active',btns[i].getAttribute('data-tab')===id);}var cts=document.querySelectorAll('.tab-content');for(var j=0;j<cts.length;j++){cts[j].classList.toggle('active',cts[j].id===id);}}function postForm(action,data){var f=document.createElement('form');f.method='post';f.action=action;f.style.display='none';for(var k in data){var el=document.createElement('input');el.type='hidden';el.name=k;el.value=data[k];f.appendChild(el);}document.body.appendChild(f);f.submit();}function activateProfile(i){postForm('/activate-profile',{'profile':String(i)});}function deleteProfile(i){if(!confirm('Delete this profile?'))return;postForm('/delete-profile',{'profile':String(i)});}function createProfile(){var inp=document.querySelector('.create-profile input[name=name]');var v=inp?inp.value.trim():'';if(!v)return;postForm('/create-profile',{'name':v});}function clearLog(){postForm('/clear-log',{});}</script>");
+    html += F("<div id='tab-tune' class='tab-content active'>");
+
     html += F("<div class='card'><h2>Driving Profiles</h2><p class='sub'>Active: <strong>");
     html += settings->getActiveProfileName();
     html += F("</strong>. Active profiles automatically keep trackside tune changes.</p>");
@@ -311,18 +317,18 @@ html += F("<div class='card'><h2>Sensors</h2>");
         html += String(profile->gyroHuntStrength);
         html += F("</small></div>");
 
-        html += F("<form method='post' action='/activate-profile'><input type='hidden' name='profile' value='");
+        html += F("<button type='button' onclick='activateProfile(");
         html += String(i);
-        html += F("'><button type='submit'>Activate</button></form>");
+        html += F(")'>Activate</button>");
 
-        html += F("<form method='post' action='/delete-profile' onsubmit=\"return confirm('Delete this profile?')\"><input type='hidden' name='profile' value='");
+        html += F("<button class='danger' type='button' onclick='deleteProfile(");
         html += String(i);
-        html += F("'><button class='danger' type='submit'>Delete</button></form></div>");
+        html += F(")'>Delete</button></div>");
     }
 
     if(settings->getProfileCount() < Settings::MAX_PROFILES)
     {
-        html += F("<form class='create-profile' method='post' action='/create-profile'><div><label>New profile name</label><input name='name' type='text' maxlength='23' required placeholder='Example: P-tile'></div><button type='submit'>Create from current tune</button></form>");
+        html += F("<div class='create-profile'><div><label>New profile name</label><input name='name' type='text' maxlength='23' required placeholder='Example: P-tile'></div><button type='button' onclick='createProfile()'>Create from current tune</button></div>");
     }
     else
     {
@@ -330,8 +336,6 @@ html += F("<div class='card'><h2>Sensors</h2>");
     }
 
     html += F("</div>");
-
-    html += F("<form method='post' action='/save'>");
 
     html += F("<div class='card'><h2>Drive &amp; Limits</h2><div class='row'>");
     html += input("Saved gain (fallback)", "gain", String(settings->getGain(), 2), "number", "0.01");
@@ -366,6 +370,19 @@ html += F("<div class='card'><h2>Sensors</h2>");
     html += input("Drift memory", "gyroIGain", String(settings->getGyroIntegralGain(), 2), "number", "0.01");
     html += input("Memory limit (us)", "gyroILimit", String(settings->getGyroIntegralLimit()), "number", "1");
     html += F("</div></div>");
+
+    html += F("<div class='card'><h2>WiFi</h2>");
+    html += checkbox("Enable WiFi on boot", "wifiEnabled", settings->getWifiEnabled());
+    html += input("Auto-off timeout ms", "wifiTimeout", String(settings->getWifiTimeout()));
+    html += F("<p class='sub'>Auto-off counts only while no device is connected. A connected phone pauses the timer; a disconnect starts a fresh timeout.</p>");
+    html += F("</div>");
+
+    html += F("<div class='card'><h2>Blackbox</h2>");
+    html += checkbox("Enable onboard logging", "blackboxEnabled", settings->getBlackboxEnabled());
+    html += F("</div>");
+
+    html += F("</div>");
+    html += F("<div id='tab-hw' class='tab-content'>");
 
     html += F("<div class='card'><h2>Servo</h2>");
     html += checkbox("Reverse servo", "servoReverse", settings->getServoReverse());
@@ -469,24 +486,12 @@ html += F("<div class='card'><h2>Sensors</h2>");
     html += F("</div><p class='sub'>Mappings take effect immediately after Save Settings. Multiple GPIOs may mirror the same channel.</p></div>");
     #endif
 
-    html += F("<div class='card'><h2>WiFi</h2>");
-    html += checkbox("Enable WiFi on boot", "wifiEnabled", settings->getWifiEnabled());
-    html += input("Auto-off timeout ms", "wifiTimeout", String(settings->getWifiTimeout()));
-    html += F("<p class='sub'>Auto-off counts only while no device is connected. A connected phone pauses the timer; a disconnect starts a fresh timeout.</p>");
-    html += F("</div>");
-
-    html += F("<div class='card'><h2>Blackbox</h2>");
-    html += checkbox("Enable onboard logging", "blackboxEnabled", settings->getBlackboxEnabled());
-    html += F("</div>");
-
-    html += F("<button type='submit'>Save Settings</button></form>");
-
     html += F("<div class='card'><h2>Hardware Test</h2><p class='sub'>Sweeps the servo or motor between endpoints to verify wiring. The gyro/radio outputs are suppressed while a test runs. Keep the wheels off the ground and the propeller clear.</p>");
     html += F("<label><input type='checkbox' id='hwUnlock' onchange='syncHwUnlock()'> <strong>Unlock hardware test</strong> <span class='dim'>(tick to enable the test buttons)</span></label>");
     html += F("<div class='row' style='margin-top:12px'><button type='button' id='btnTestServo' onclick='runHwTest(\"servo\")'>Test Servo</button>");
     html += F("<button type='button' id='btnTestMotor' onclick='runHwTest(\"motor\")'>Test Motor</button></div>");
     html += F("<p class='sub' id='hwStatus'>Idle</p>");
-    html += F("<script>function syncHwUnlock(){var u=document.getElementById('hwUnlock').checked;document.getElementById('btnTestServo').disabled=!u;document.getElementById('btnTestMotor').disabled=!u;}function runHwTest(t){if(!document.getElementById('hwUnlock').checked)return;var st=document.getElementById('hwStatus');st.textContent='Running '+t+' test (moves servo/motor)...';st.style.color='#f0c24b';fetch('/api/test_'+t+'?unlock=1',{method:'POST',cache:'no-store'}).then(function(r){return r.text();}).then(function(x){st.textContent=x;st.style.color='#aeb4bb';}).catch(function(){st.textContent='Request failed';st.style.color='#f05b5b';});}syncHwUnlock();</script></div>");
+    html += F("<script>function syncHwUnlock(){var u=document.getElementById('hwUnlock').checked;document.getElementById('btnTestServo').disabled=!u;document.getElementById('btnTestMotor').disabled=!u;}function runHwTest(t){if(!document.getElementById('hwUnlock').checked)return;var st=document.getElementById('hwStatus');st.textContent='Running '+t+' test (moves servo/motor)...';st.style.color='#f0c24b';fetch('/api/test_'+t+'?unlock=1',{method:'POST',cache:'no-store'}).then(function(r){return r.text();}).then(function(x){st.textContent=x;st.style.color='#8b949e';}).catch(function(){st.textContent='Request failed';st.style.color='#9e2a2b';});}syncHwUnlock();</script></div>");
 
     html += F("<div class='card'><h2>Blackbox Log</h2>");
 
@@ -521,7 +526,7 @@ html += F("<div class='card'><h2>Sensors</h2>");
 
         html += F("</p><p class='sub'>Stage-one logger: records stay entirely in volatile PSRAM. No internal flash writes occur. Download converts the binary records to CSV; power cycling clears the log.</p>");
         html += F("<a href='/blackbox.csv'>Download CSV</a>");
-        html += F("<form method='post' action='/clear-log'><button type='submit'>Clear RAM Log</button></form>");
+        html += F("<button type='button' onclick='clearLog()'>Clear RAM Log</button>");
     }
     else
     {
@@ -529,6 +534,9 @@ html += F("<div class='card'><h2>Sensors</h2>");
     }
 
     html += F("</div>");
+
+    html += F("</div>");
+    html += F("<button type='submit'>Save Settings</button></form>");
 
     html += F("</main><footer class='fork'>PirateDriftRC &mdash; a fork of <span class='from'>OpenDriftRC</span></footer><script>function updateLive(){fetch('/live-status',{cache:'no-store'}).then(r=>r.json()).then(s=>{document.getElementById('activeGain').textContent=Number(s.gain).toFixed(2);document.getElementById('gainOverride').textContent=s.override?'CH3 gain override active':'Saved gain active';function setPill(id,txt,ok){var el=document.getElementById(id);if(!el)return;el.textContent=txt;el.className=ok?'ok':'bad';}if(s.elrs&&s.elrs.present){setPill('elrsPill',s.elrs.connected?('Connected'+(s.elrs.lq>0?' &middot; LQ '+s.elrs.lq+'%':'')+(s.elrs.snr!==0?' &middot; '+s.elrs.snr+'dB':'')):'No signal',s.elrs.connected);var f=document.getElementById('elrsFrames');if(f)f.textContent=s.elrs.frames;var c=document.getElementById('elrsCrc');if(c){c.textContent=s.elrs.crcErrors;c.className=s.elrs.crcErrors>0?'bad':'dim';}var a=document.getElementById('elrsAge');if(a)a.textContent=s.elrs.frameAgeMs+' ms';}else{setPill('elrsPill','N/A',true);}if(s.imu){setPill('imuPill',s.imu.ready?'Ready':'Module not found',s.imu.ready);var gx=document.getElementById('gyroX');if(gx)gx.textContent=s.imu.gyroX;var gy=document.getElementById('gyroY');if(gy)gy.textContent=s.imu.gyroY;var yr=document.getElementById('yawRate');if(yr)yr.textContent=s.imu.yawRate;var am=document.getElementById('accelMag');if(am)am.textContent=s.imu.accelMag;}}).catch(()=>{});}updateLive();setInterval(updateLive,500);</script></body></html>");
 
