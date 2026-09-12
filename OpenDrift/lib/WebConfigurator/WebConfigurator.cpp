@@ -179,7 +179,7 @@ void WebConfigurator::handleRoot()
     html.reserve(20000);
 
     html += F("<!doctype html><html><head><meta name='viewport' content='width=device-width,initial-scale=1'>");
-    html += F("<title>OpenDrift Config</title><style>");
+    html += F("<title>PirateDriftRC Config</title><style>");
     html += F("body{font-family:system-ui,Arial,sans-serif;margin:0;background:#101214;color:#f5f5f5}");
     html += F("main{max-width:760px;margin:0 auto;padding:18px}");
     html += F("h1{font-size:28px;margin:8px 0 2px}h2{font-size:18px;margin:22px 0 10px}");
@@ -190,9 +190,10 @@ void WebConfigurator::handleRoot()
     html += F(".ok{color:#3ecf8e;font-weight:700}.bad{color:#e05555;font-weight:700}.dim{color:#aeb4bb;font-size:12px}.sens{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:10px;background:#0b0d10;border:1px solid #33383f;border-radius:6px;margin:6px 0}");
     html += F("button{width:100%;padding:13px 16px;border:0;border-radius:6px;background:#24a36b;color:#fff;font-size:17px;font-weight:700;margin-top:16px}");
     html += F(".profile{display:grid;grid-template-columns:1fr 96px 82px;gap:8px;align-items:center;background:#0b0d10;border:1px solid #33383f;border-radius:6px;padding:9px;margin:8px 0}.profile.active{border-color:#24a36b}.profile strong{display:block}.profile small{color:#aeb4bb}.profile form{margin:0}.profile button{margin:0;padding:9px 6px;font-size:13px}.profile .danger{background:#973b45}.create-profile{display:grid;grid-template-columns:1fr 150px;gap:10px;align-items:end}.create-profile button{margin:0;height:43px}");
+    html += F("a{color:#65b7ff}footer{text-align:center;color:#7c828a;font-size:12px;margin:26px 0 8px}.fork .from{color:#aeb4bb}");
     html += F("a{color:#65b7ff}@media(max-width:560px){.row,.status,.create-profile{grid-template-columns:1fr}.profile{grid-template-columns:1fr 1fr}.profile>div{grid-column:1/-1}}");
     html += F("</style></head><body><main>");
-    html += F("<h1>OpenDrift</h1><div class='sub'>Web configurator</div>");
+    html += F("<h1>PirateDriftRC</h1><div class='sub'>Web configurator</div>");
 
     html += F("<div class='card'><h2>Live Radio</h2><div class='status'>");
     html += F("<div class='pill'>Steering: ");
@@ -307,7 +308,7 @@ html += F("<div class='card'><h2>Sensors</h2>");
     html += checkbox("Reverse gyro correction", "gyroReverse", settings->getGyroReverse());
     html += F("</div>");
 
-    html += F("<div class='card'><h2>OpenDrift v1.0 Response</h2><div class='row'>");
+    html += F("<div class='card'><h2>PirateDrift v1.0 Response</h2><div class='row'>");
     html += input("Smoothing", "gyroSmoothing", String(settings->getGyroSmoothing(), 2), "number", "0.01");
     html += F("<label>Gyro sensor LPF</label><select name='gyroLpfMode'><option value='0'");
     if(settings->getGyroLpfMode() == 0) html += F(" selected");
@@ -318,14 +319,14 @@ html += F("<div class='card'><h2>Sensors</h2>");
     html += F(">Off - raw bandwidth</option></select>");
     html += input("Prediction strength (0-100)", "predictionStrength", String(settings->getPredictionStrength()), "number", "1");
     html += input("Anti Wobble (0-100)", "huntStrength", String(settings->getGyroHuntStrength()), "number", "1");
-    html += F("<p class='sub'>Anti Wobble controls the depth of OpenDrift's narrow, phase-aware wheel-wobble notch. Start at 50. Raise it only if a repeating wheel oscillation remains; lower it if steering begins to feel soft or unnatural. Zero bypasses the notch and 100 applies its maximum depth.</p>");
+    html += F("<p class='sub'>Anti Wobble controls the depth of PirateDrift's narrow, phase-aware wheel-wobble notch. Start at 50. Raise it only if a repeating wheel oscillation remains; lower it if steering begins to feel soft or unnatural. Zero bypasses the notch and 100 applies its maximum depth.</p>");
     html += F("</div></div>");
 
     html += F("<div class='card'><h2>Transition Response</h2><p class='sub'>Transition Speed follows the complete chassis direction change. 50 is neutral; lower values add damping for slower transitions and higher values release damping for faster transitions. It never changes the Max Correction ceiling. Compare 25, 50, and 75 at the same tune.</p><div class='row'>");
     html += input("Transition speed (0-100)", "transitionSpeed", String(settings->getGyroTransitionSpeed()), "number", "1");
     html += F("</div></div>");
 
-    html += F("<div class='card'><h2>Drift Assist</h2><p class='sub'>Countersteer Assist changes only the steady steering workload. Zero preserves the base v1.0 response; higher values let OpenDrift carry more of a settled drift.</p><div class='row'>");
+    html += F("<div class='card'><h2>Drift Assist</h2><p class='sub'>Countersteer Assist changes only the steady steering workload. Zero preserves the base v1.0 response; higher values let PirateDrift carry more of a settled drift.</p><div class='row'>");
     html += input("Countersteer assist (0-100)", "counterSteerAssist", String(settings->getGyroCounterSteerAssist()), "number", "1");
     html += input("Hold assist (0-100)", "gyroHoldBoost", String(settings->getGyroHoldBoost()), "number", "1");
     html += input("Drift memory", "gyroIGain", String(settings->getGyroIntegralGain(), 2), "number", "0.01");
@@ -488,7 +489,7 @@ html += F("<div class='card'><h2>Sensors</h2>");
 
     html += F("</div>");
 
-    html += F("</main><script>function updateLive(){fetch('/live-status',{cache:'no-store'}).then(r=>r.json()).then(s=>{document.getElementById('activeGain').textContent=Number(s.gain).toFixed(2);document.getElementById('gainOverride').textContent=s.override?'CH3 gain override active':'Saved gain active';function setPill(id,txt,ok){var el=document.getElementById(id);if(!el)return;el.textContent=txt;el.className=ok?'ok':'bad';}if(s.elrs&&s.elrs.present){setPill('elrsPill',s.elrs.connected?('Connected'+(s.elrs.lq>0?' &middot; LQ '+s.elrs.lq+'%':'')+(s.elrs.snr!==0?' &middot; '+s.elrs.snr+'dB':'')):'No signal',s.elrs.connected);var f=document.getElementById('elrsFrames');if(f)f.textContent=s.elrs.frames;var c=document.getElementById('elrsCrc');if(c){c.textContent=s.elrs.crcErrors;c.className=s.elrs.crcErrors>0?'bad':'dim';}var a=document.getElementById('elrsAge');if(a)a.textContent=s.elrs.frameAgeMs+' ms';}else{setPill('elrsPill','N/A',true);}if(s.imu){setPill('imuPill',s.imu.ready?'Ready':'Module not found',s.imu.ready);var gx=document.getElementById('gyroX');if(gx)gx.textContent=s.imu.gyroX;var gy=document.getElementById('gyroY');if(gy)gy.textContent=s.imu.gyroY;var yr=document.getElementById('yawRate');if(yr)yr.textContent=s.imu.yawRate;var am=document.getElementById('accelMag');if(am)am.textContent=s.imu.accelMag;}}).catch(()=>{});}updateLive();setInterval(updateLive,500);</script></body></html>");
+    html += F("</main><footer class='fork'>PirateDriftRC &mdash; a fork of <span class='from'>OpenDriftRC</span></footer><script>function updateLive(){fetch('/live-status',{cache:'no-store'}).then(r=>r.json()).then(s=>{document.getElementById('activeGain').textContent=Number(s.gain).toFixed(2);document.getElementById('gainOverride').textContent=s.override?'CH3 gain override active':'Saved gain active';function setPill(id,txt,ok){var el=document.getElementById(id);if(!el)return;el.textContent=txt;el.className=ok?'ok':'bad';}if(s.elrs&&s.elrs.present){setPill('elrsPill',s.elrs.connected?('Connected'+(s.elrs.lq>0?' &middot; LQ '+s.elrs.lq+'%':'')+(s.elrs.snr!==0?' &middot; '+s.elrs.snr+'dB':'')):'No signal',s.elrs.connected);var f=document.getElementById('elrsFrames');if(f)f.textContent=s.elrs.frames;var c=document.getElementById('elrsCrc');if(c){c.textContent=s.elrs.crcErrors;c.className=s.elrs.crcErrors>0?'bad':'dim';}var a=document.getElementById('elrsAge');if(a)a.textContent=s.elrs.frameAgeMs+' ms';}else{setPill('elrsPill','N/A',true);}if(s.imu){setPill('imuPill',s.imu.ready?'Ready':'Module not found',s.imu.ready);var gx=document.getElementById('gyroX');if(gx)gx.textContent=s.imu.gyroX;var gy=document.getElementById('gyroY');if(gy)gy.textContent=s.imu.gyroY;var yr=document.getElementById('yawRate');if(yr)yr.textContent=s.imu.yawRate;var am=document.getElementById('accelMag');if(am)am.textContent=s.imu.accelMag;}}).catch(()=>{});}updateLive();setInterval(updateLive,500);</script></body></html>");
 
     server.send(
         200,

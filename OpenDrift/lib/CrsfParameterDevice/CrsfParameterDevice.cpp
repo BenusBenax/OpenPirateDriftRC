@@ -127,7 +127,7 @@ void CrsfParameterDevice::sendDeviceInfo(
     uint8_t payload[48] = {0};
     uint8_t length = 0;
 
-    appendString(payload, length, "OpenDrift");
+    appendString(payload, length, "PirateDriftRC");
     appendInt32(payload, length, 0x4F445243);
     appendInt32(payload, length, 0x00000128);
     appendInt32(payload, length, 0x00010000);

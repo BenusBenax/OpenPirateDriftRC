@@ -1749,7 +1749,7 @@ void UI::drawMainPage(
     lcd->setTextColor(ROUND_CYAN);
 
     lcd->drawCenterString(
-        "OpenDrift",
+        "PirateDriftRC",
         120,
         20
     );
@@ -2253,9 +2253,9 @@ void UI::drawSystemPage(
     lcd->setTextColor(TFT_WHITE);
     lcd->drawCenterString(
         #if defined(OPENDRIFT_INPUT_CRSF)
-        "OpenDrift CRSF BETA",
+        "PirateDriftRC CRSF BETA",
         #else
-        "OpenDrift OPEN BETA",
+        "PirateDriftRC OPEN BETA",
         #endif
         120,
         57

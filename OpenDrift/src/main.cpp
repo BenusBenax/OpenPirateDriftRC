@@ -183,8 +183,8 @@ volatile bool crsfThrottleSignalSnapshot = false;
 volatile int crsfThrottlePulseSnapshot = 1500;
 #endif
 
-const char* ssid = "OpenDrift";
-const char* password = "opendrift";
+const char* ssid = "PirateDriftRC";
+const char* password = "piratedrift";
 
 
 #if defined(OPENDRIFT_BOARD_AMOLED_164)
@@ -322,12 +322,12 @@ public:
         canvas.drawString(
             #if defined(OPENDRIFT_INPUT_CRSF)
             #if defined(OPENDRIFT_CRSF_OOPS_SWAPPED_PINS)
-            "OpenDrift PERSONAL OOPS boot",
+            "PirateDriftRC PERSONAL OOPS boot",
             #else
-            "OpenDrift CRSF verbose boot",
+            "PirateDriftRC CRSF verbose boot",
             #endif
             #else
-            "OpenDrift verbose boot",
+            "PirateDriftRC verbose boot",
             #endif
             8,
             7
@@ -360,9 +360,9 @@ public:
         display->setTextSize(2);
         display->drawCenterString(
             #if defined(OPENDRIFT_INPUT_CRSF)
-            "OpenDrift CRSF BETA",
+            "PirateDriftRC CRSF BETA",
             #else
-            "OpenDrift OPEN BETA",
+            "PirateDriftRC OPEN BETA",
             #endif
             120,
             12
@@ -403,7 +403,7 @@ public:
             canvas.setTextSize(AMOLED_BOOT_LOG_TEXT_SIZE);
             canvas.setTextColor(0x7BEF);
             canvas.drawString(
-                "OpenDrift boot log (continued)",
+                "PirateDriftRC boot log (continued)",
                 8,
                 8
             );
@@ -443,7 +443,7 @@ public:
             display->setTextSize(1);
             display->setTextColor(0x7BEF);
             display->drawCenterString(
-                "OpenDrift boot log (continued)",
+                "PirateDriftRC boot log (continued)",
                 120,
                 18
             );
@@ -1201,7 +1201,7 @@ void setup()
     delay(500);
     #endif
 
-    Serial.println("OpenDrift Starting");
+    Serial.println("PirateDriftRC Starting");
 
     #if defined(OPENDRIFT_INPUT_CRSF)
     // Do not let a powered F1000 receiver start UART activity while the panel,
@@ -1307,7 +1307,7 @@ void setup()
     controlLoopPeriodMs = 1000 / controlLoopHz;
 
     bootConsole.log(
-        "nvs: mounted OpenDrift settings store",
+        "nvs: mounted PirateDriftRC settings store",
         settingsOk ? "[ OK ]" : "[WARN]",
         settingsOk ? TFT_GREEN : TFT_YELLOW
     );
@@ -1819,7 +1819,7 @@ void setup()
         snprintf(
             wifiMessage,
             sizeof(wifiMessage),
-            "wlan0: AP OpenDrift ready at %s",
+            "wlan0: AP PirateDriftRC ready at %s",
             IP.toString().c_str()
         );
 
@@ -1859,7 +1859,7 @@ void setup()
     //-------------------
 
     bootConsole.log(
-        "systemd[1]: Reached target OpenDrift UI"
+        "systemd[1]: Reached target PirateDriftRC UI"
     );
 
     delay(350);
@@ -1900,7 +1900,7 @@ void setup()
         crsfOk
         ? xTaskCreatePinnedToCore(
             crsfTask,
-            "OpenDriftCRSF",
+            "PirateCrsf",
             4096,
             nullptr,
             3,
@@ -1922,7 +1922,7 @@ void setup()
     BaseType_t taskStarted =
         xTaskCreatePinnedToCore(
             controlTask,
-            "OpenDriftControl",
+            "PirateControl",
             8192,
             nullptr,
             4,
@@ -1961,7 +1961,7 @@ void loop()
         lastHeartbeatMs =
             millis();
 
-        Serial.println("OpenDrift heartbeat");
+        Serial.println("PirateDriftRC heartbeat");
 
         #if defined(OPENDRIFT_INPUT_CRSF)
         Serial.printf(

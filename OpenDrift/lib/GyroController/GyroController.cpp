@@ -1221,7 +1221,7 @@ int GyroController::update(
         directDampingScale;
 
     // Countersteer Assist is deliberately sourced from the slow learned
-    // drift reference. It increases how much of a settled drift OpenDrift
+    // drift reference. It increases how much of a settled drift PirateDriftRC
     // carries without raising fast yaw damping or responding to chatter.
     float steadyAssistCorrection =
         driftReferenceReady

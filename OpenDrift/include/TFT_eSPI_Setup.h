@@ -1,6 +1,6 @@
-// OpenDrift — Waveshare ESP32-S3-Touch-LCD-1.28 (GC9A01A)
+// PirateDriftRC — Waveshare ESP32-S3-Touch-LCD-1.28 (GC9A01A)
 #define USER_SETUP_ID 302
-#define USER_SETUP_INFO "OpenDrift ESP32-S3-Touch-LCD-1.28"
+#define USER_SETUP_INFO "PirateDriftRC ESP32-S3-Touch-LCD-1.28"
 
 #define GC9A01_DRIVER
 
