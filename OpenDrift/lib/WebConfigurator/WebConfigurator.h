@@ -9,6 +9,8 @@
 #include "BlackboxLogger.h"
 #include "IMU.h"
 #include "CrsfInput.h"
+#include "Servo.h"
+#include "EscOutput.h"
 
 
 class WebConfigurator
@@ -26,7 +28,11 @@ public:
         BlackboxLogger& blackbox,
         IMU* imuRef = nullptr,
         bool imuReady = false,
-        CrsfInput* crsfRef = nullptr
+        CrsfInput* crsfRef = nullptr,
+        ServoOutput* servoRef = nullptr,
+        EscOutput* escRef = nullptr,
+        volatile bool* hwTestFlag = nullptr,
+        uint8_t motorOutputPin = 0
     );
 
     void update();
@@ -58,6 +64,20 @@ private:
 
     bool running = false;
 
+    ServoOutput* servoOut = nullptr;
+
+    EscOutput* escOut = nullptr;
+
+    // Shared with main.cpp so the control/gyro loop stops writing the servo
+    // and throttle while a bench hardware test is running.
+    volatile bool* hardwareTestFlag = nullptr;
+
+    uint8_t motorOutputPin = 0;
+
+    volatile bool hwTestRunning = false;
+
+    TaskHandle_t hwTestTaskHandle = nullptr;
+
     void handleRoot();
 
     void handleLiveStatus();
@@ -73,6 +93,14 @@ private:
     void handleLogDownload();
 
     void handleLogClear();
+
+    void handleTestServo();
+
+    void handleTestMotor();
+
+    void startHardwareTest(bool motor);
+
+    static void hardwareTestTask(void* param);
 
     void handleNotFound();
 

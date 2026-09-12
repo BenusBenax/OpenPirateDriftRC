@@ -175,6 +175,11 @@ bool pin18ThrottleOutputMode = false;
 
 bool throttleOutputActive = false;
 
+// Raised by the web hardware-test task while a servo/motor bench test runs.
+// The gyro/PID control loop checks it and stops writing the servo and
+// throttle outputs so the test task has sole control of the PWM.
+volatile bool isHardwareTesting = false;
+
 #if defined(OPENDRIFT_INPUT_CRSF)
 bool crsfThrottleArmed = false;
 bool lastCrsfSignal = false;
@@ -991,7 +996,7 @@ void runControlIteration()
     int servoCommand =
         steeringServo.getPosition();
 
-    if(steeringSignal)
+    if(!isHardwareTesting && steeringSignal)
     {
         // Steering Travel scales only the driver's command. Max Correction
         // independently controls gyro authority, and physical calibration is
@@ -1838,7 +1843,13 @@ void setup()
             imuOk
             #if defined(OPENDRIFT_INPUT_CRSF)
             , &crsf
+            #else
+            , nullptr
             #endif
+            , &steeringServo
+            , &throttleOutput
+            , &isHardwareTesting
+            , SHARED_GAIN_THROTTLE_PIN
         );
 
         bootConsole.log(
@@ -2029,7 +2040,13 @@ void loop()
             imuOk
             #if defined(OPENDRIFT_INPUT_CRSF)
             , &crsf
+            #else
+            , nullptr
             #endif
+            , &steeringServo
+            , &throttleOutput
+            , &isHardwareTesting
+            , SHARED_GAIN_THROTTLE_PIN
         );
     }
 
@@ -2061,6 +2078,7 @@ void loop()
     #endif
     #else
     if(
+        !isHardwareTesting &&
         pin18ThrottleOutputMode &&
         throttleRadio.hasSignal()
     )
@@ -2088,6 +2106,7 @@ void loop()
         }
     }
     else if(
+        !isHardwareTesting &&
         pin18ThrottleOutputMode &&
         throttleOutputActive
     )

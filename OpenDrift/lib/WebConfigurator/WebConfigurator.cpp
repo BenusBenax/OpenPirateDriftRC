@@ -22,7 +22,11 @@ void WebConfigurator::begin(
     BlackboxLogger& blackboxRef,
     IMU* imuRef,
     bool imuReadyRef,
-    CrsfInput* crsfRef
+    CrsfInput* crsfRef,
+    ServoOutput* servoRef,
+    EscOutput* escRef,
+    volatile bool* hwTestFlagRef,
+    uint8_t motorOutputPinRef
 )
 {
     settings =
@@ -51,6 +55,18 @@ void WebConfigurator::begin(
 
     crsf =
         crsfRef;
+
+    servoOut =
+        servoRef;
+
+    escOut =
+        escRef;
+
+    hardwareTestFlag =
+        hwTestFlagRef;
+
+    motorOutputPin =
+        motorOutputPinRef;
 
     server.on(
         "/",
@@ -121,6 +137,24 @@ void WebConfigurator::begin(
         [this]()
         {
             handleLogClear();
+        }
+    );
+
+    server.on(
+        "/api/test_servo",
+        HTTP_POST,
+        [this]()
+        {
+            handleTestServo();
+        }
+    );
+
+    server.on(
+        "/api/test_motor",
+        HTTP_POST,
+        [this]()
+        {
+            handleTestMotor();
         }
     );
 
@@ -446,6 +480,13 @@ html += F("<div class='card'><h2>Sensors</h2>");
     html += F("</div>");
 
     html += F("<button type='submit'>Save Settings</button></form>");
+
+    html += F("<div class='card'><h2>Hardware Test</h2><p class='sub'>Sweeps the servo or motor between endpoints to verify wiring. The gyro/radio outputs are suppressed while a test runs. Keep the wheels off the ground and the propeller clear.</p>");
+    html += F("<label><input type='checkbox' id='hwUnlock' onchange='syncHwUnlock()'> <strong>Unlock hardware test</strong> <span class='dim'>(tick to enable the test buttons)</span></label>");
+    html += F("<div class='row' style='margin-top:12px'><button type='button' id='btnTestServo' onclick='runHwTest(\"servo\")'>Test Servo</button>");
+    html += F("<button type='button' id='btnTestMotor' onclick='runHwTest(\"motor\")'>Test Motor</button></div>");
+    html += F("<p class='sub' id='hwStatus'>Idle</p>");
+    html += F("<script>function syncHwUnlock(){var u=document.getElementById('hwUnlock').checked;document.getElementById('btnTestServo').disabled=!u;document.getElementById('btnTestMotor').disabled=!u;}function runHwTest(t){if(!document.getElementById('hwUnlock').checked)return;var st=document.getElementById('hwStatus');st.textContent='Running '+t+' test (moves servo/motor)...';st.style.color='#f0c24b';fetch('/api/test_'+t+'?unlock=1',{method:'POST',cache:'no-store'}).then(function(r){return r.text();}).then(function(x){st.textContent=x;st.style.color='#aeb4bb';}).catch(function(){st.textContent='Request failed';st.style.color='#f05b5b';});}syncHwUnlock();</script></div>");
 
     html += F("<div class='card'><h2>Blackbox Log</h2>");
 
@@ -1122,6 +1163,216 @@ void WebConfigurator::handleLogClear()
 
     server.send(
         303
+    );
+}
+
+
+
+// Hardware test task parameter bundle. Kept small and self-contained so the
+// task has no dependency on volatile WebConfigurator members beyond the flag.
+struct HardwareTestParam
+{
+    WebConfigurator* self = nullptr;
+
+    ServoOutput* servo = nullptr;
+
+    EscOutput* esc = nullptr;
+
+    volatile bool* flag = nullptr;
+
+    uint8_t motorPin = 0;
+
+    bool motor = false;
+};
+
+
+
+void WebConfigurator::handleTestServo()
+{
+    startHardwareTest(false);
+}
+
+
+
+void WebConfigurator::handleTestMotor()
+{
+    startHardwareTest(true);
+}
+
+
+
+void WebConfigurator::startHardwareTest(
+    bool motor
+)
+{
+    if(!server.hasArg("unlock"))
+    {
+        server.send(
+            403,
+            "text/plain",
+            "Hardware test blocked: unlock flag missing"
+        );
+
+        return;
+    }
+
+    if(hwTestRunning)
+    {
+        server.send(
+            409,
+            "text/plain",
+            "Hardware test already running"
+        );
+
+        return;
+    }
+
+    HardwareTestParam* param =
+        new HardwareTestParam();
+
+    param->self = this;
+    param->servo = servoOut;
+    param->esc = escOut;
+    param->flag = hardwareTestFlag;
+    param->motorPin = motorOutputPin;
+    param->motor = motor;
+
+    BaseType_t created =
+        xTaskCreate(
+            hardwareTestTask,
+            "hwTest",
+            4096,
+            param,
+            2,
+            &hwTestTaskHandle
+        );
+
+    if(created != pdPASS)
+    {
+        delete param;
+
+        server.send(
+            500,
+            "text/plain",
+            "Failed to start hardware test task"
+        );
+
+        return;
+    }
+
+    hwTestRunning = true;
+
+    server.send(
+        200,
+        "text/plain",
+        motor
+            ? "Motor test started"
+            : "Servo test started"
+    );
+}
+
+
+
+void WebConfigurator::hardwareTestTask(
+    void* paramPtr
+)
+{
+    HardwareTestParam* param =
+        static_cast<HardwareTestParam*>(paramPtr);
+
+    if(param->flag != nullptr)
+    {
+        *param->flag = true;
+    }
+
+    // Fully sweep the output between its mechanical endpoints: neutral (1500)
+    // up to max (2000), pause, down to min (1000), pause, and back to neutral.
+    constexpr int STEP_US = 25;
+    constexpr int STEP_DELAY_MS = 15;
+
+    if(!param->motor)
+    {
+        ServoOutput* servo = param->servo;
+
+        if(servo != nullptr)
+        {
+            for(int us = 1500; us <= 2000; us += STEP_US)
+            {
+                servo->writeMicroseconds(us);
+                vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
+            }
+
+            vTaskDelay(pdMS_TO_TICKS(500));
+
+            for(int us = 2000; us >= 1000; us -= STEP_US)
+            {
+                servo->writeMicroseconds(us);
+                vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
+            }
+
+            vTaskDelay(pdMS_TO_TICKS(500));
+
+            for(int us = 1000; us <= 1500; us += STEP_US)
+            {
+                servo->writeMicroseconds(us);
+                vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
+            }
+        }
+    }
+    else
+    {
+        EscOutput* esc = param->esc;
+
+        if(esc != nullptr)
+        {
+            // Take sole ownership of the ESC output for the duration of the
+            // test, then restore a clean detached state.
+            esc->end();
+            esc->configure(1500, false, 100, 0);
+
+            if(esc->begin(param->motorPin, 50))
+            {
+                for(int us = 1500; us <= 2000; us += STEP_US)
+                {
+                    esc->writeMicroseconds(us);
+                    vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
+                }
+
+                vTaskDelay(pdMS_TO_TICKS(500));
+
+                for(int us = 2000; us >= 1000; us -= STEP_US)
+                {
+                    esc->writeMicroseconds(us);
+                    vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
+                }
+
+                vTaskDelay(pdMS_TO_TICKS(500));
+
+                for(int us = 1000; us <= 1500; us += STEP_US)
+                {
+                    esc->writeMicroseconds(us);
+                    vTaskDelay(pdMS_TO_TICKS(STEP_DELAY_MS));
+                }
+
+                esc->end();
+            }
+        }
+    }
+
+    if(param->flag != nullptr)
+    {
+        *param->flag = false;
+    }
+
+    if(param->self != nullptr)
+    {
+        param->self->hwTestRunning = false;
+    }
+
+    delete param;
+
+    vTaskDelete(
+        nullptr
     );
 }
 
