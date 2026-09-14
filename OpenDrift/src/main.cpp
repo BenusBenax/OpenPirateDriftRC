@@ -113,11 +113,12 @@ TaskHandle_t crsfTaskHandle = nullptr;
 
 #if defined(OPENDRIFT_INPUT_CRSF)
     #if defined(OPENDRIFT_BOARD_C3)
-    // ESP32-C3: GPIO20 is the receiver UART RX, GPIO21 is the UART TX.
-    #define SERVO_OUTPUT_PIN 0
-    #define CRSF_RX_PIN 20
-    #define CRSF_TX_PIN 21
-    #define CRSF_THROTTLE_OUTPUT_PIN 1
+    // ESP32-C3: ELRS/CRSF receiver UART on GPIO3 (RX) / GPIO4 (TX). GPIO0/1/20/21
+    // stay free for the physical wiring; steering servo on GPIO2, ESC on GPIO5.
+    #define SERVO_OUTPUT_PIN 2
+    #define CRSF_RX_PIN 3
+    #define CRSF_TX_PIN 4
+    #define CRSF_THROTTLE_OUTPUT_PIN 5
     #elif defined(OPENDRIFT_CRSF_OOPS_SWAPPED_PINS)
     #define SERVO_OUTPUT_PIN 16
     #define CRSF_RX_PIN 17
@@ -167,6 +168,15 @@ static constexpr int CRSF_THROTTLE_NEUTRAL_BAND_US = 50;
 #define SHARED_GAIN_THROTTLE_PIN 2
 #else
 #define SHARED_GAIN_THROTTLE_PIN 18
+#endif
+
+// Pin used by the web hardware test for the motor/ESC output. In the CRSF build
+// the ESC lives on its dedicated throttle pin; in the PWM build it shares the
+// gain/throttle secondary pin.
+#if defined(OPENDRIFT_INPUT_CRSF)
+#define MOTOR_TEST_OUTPUT_PIN CRSF_THROTTLE_OUTPUT_PIN
+#else
+#define MOTOR_TEST_OUTPUT_PIN SHARED_GAIN_THROTTLE_PIN
 #endif
 
 bool pin18ModeConfigured = false;
@@ -1856,7 +1866,7 @@ void setup()
             , &steeringServo
             , &throttleOutput
             , &isHardwareTesting
-            , SHARED_GAIN_THROTTLE_PIN
+            , MOTOR_TEST_OUTPUT_PIN
         );
 
         bootConsole.log(
@@ -2053,7 +2063,7 @@ void loop()
             , &steeringServo
             , &throttleOutput
             , &isHardwareTesting
-            , SHARED_GAIN_THROTTLE_PIN
+            , MOTOR_TEST_OUTPUT_PIN
         );
     }
 
