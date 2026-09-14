@@ -23,6 +23,15 @@ bool EscOutput::begin(
     if(configuredFrequency == 0)
     {
         pin = -1;
+
+        Serial.printf(
+            "ESC PWM: ledcSetup(ch%u, %u Hz, %u bit) failed on GPIO %d\n",
+            (unsigned)LEDC_CHANNEL,
+            (unsigned)frequency,
+            (unsigned)LEDC_RESOLUTION_BITS,
+            outputPin
+        );
+
         return false;
     }
 
