@@ -638,6 +638,15 @@ void updateCrsfThrottleOutput(
         return;
     }
 
+    // The web motor test detaches the ESC output. If we think we are still
+    // armed but the output is no longer active, demand a fresh neutral hold
+    // before resuming throttle instead of silently writing to a detached pin.
+    if(crsfThrottleArmed && !throttleOutput.isActive())
+    {
+        crsfThrottleArmed = false;
+        crsfThrottleNeutralSinceMs = 0;
+    }
+
     if(!signalValid)
     {
         if(throttleOutputActive)
@@ -2100,7 +2109,9 @@ void loop()
         throttleRadio.hasSignal()
     )
     {
-        if(!throttleOutputActive)
+        // Re-begin if the web motor test detached the ESC output while the
+        // stale throttleOutputActive flag still claims it is attached.
+        if(!throttleOutputActive || !throttleOutput.isActive())
         {
             throttleOutput.configure(
                 1500,
