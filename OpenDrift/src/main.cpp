@@ -621,6 +621,13 @@ void updateCrsfThrottleOutput(
     bool signalValid
 )
 {
+    // A web hardware test owns the ESC output (throttleOutput). Stop writing
+    // throttle here so the test task has sole control of the PWM while it runs.
+    if(isHardwareTesting)
+    {
+        return;
+    }
+
     if(!signalValid)
     {
         if(throttleOutputActive)
