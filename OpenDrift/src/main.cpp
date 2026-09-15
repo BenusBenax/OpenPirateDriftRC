@@ -1068,10 +1068,20 @@ void runControlIteration()
 
     lastCrsfSignal = steeringSignal;
 
-    // The main loop owns throttle PWM attachment and removal. ESP32Servo's
-    // dynamic LEDC allocation must not run inside this high-priority task.
-    crsfThrottlePulseSnapshot = throttlePulse;
-    crsfThrottleSignalSnapshot = throttleSignal;
+    // Drive the ESC throttle output from the high-priority control task, not from
+    // the low-priority loop(). loop() is frequently blocked by the WiFi / HTTP
+    // server, which would otherwise freeze the throttle at its last pulse (often
+    // full) and keep the motor spinning. EscOutput uses a raw, fixed LEDC channel
+    // (task-safe) rather than ESP32Servo's dynamic allocator.
+    updateCrsfThrottleOutput(
+        throttlePulse,
+        throttleSignal
+    );
+
+    crsfThrottlePulseSnapshot =
+        throttlePulse;
+    crsfThrottleSignalSnapshot =
+        throttleSignal;
     #endif
 
     ControlTelemetry nextTelemetry;
@@ -2084,17 +2094,6 @@ void loop()
     configurePin18Mode();
 
     #if defined(OPENDRIFT_INPUT_CRSF)
-    bool crsfThrottleSignal =
-        crsfThrottleSignalSnapshot;
-
-    int crsfThrottlePulse =
-        crsfThrottlePulseSnapshot;
-
-    updateCrsfThrottleOutput(
-        crsfThrottlePulse,
-        crsfThrottleSignal
-    );
-
     #if defined(OPENDRIFT_BOARD_AMOLED_164)
     auxChannelOutputs.update(
         settings,
